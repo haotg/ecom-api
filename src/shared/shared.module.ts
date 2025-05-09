@@ -25,6 +25,10 @@ const sharedServices = [PrismaService, HashingService, TokenService]
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
     },
+    // {
+    //   provide: APP_FILTER,
+    //   useClass: CatchEverythingFilter,
+    // },
   ],
   exports: sharedServices,
   imports: [JwtModule],
