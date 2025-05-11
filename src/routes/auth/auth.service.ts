@@ -11,6 +11,7 @@ import { addMilliseconds } from 'date-fns'
 import ms from 'ms'
 import envConfig from 'src/shared/config'
 import { TypeVerificationCode } from 'src/shared/constants/auth.constant'
+import { EmailService } from 'src/shared/services/email.service'
 
 @Injectable()
 export class AuthService {
@@ -19,6 +20,7 @@ export class AuthService {
     private readonly rolesService: RolesService,
     private readonly authRepository: AuthRepository,
     private readonly sharedUserRepository: SharedUserRepository,
+    private readonly emailService: EmailService,
   ) {}
   async register(body: RegisterBodyType) {
     try {
@@ -79,6 +81,13 @@ export class AuthService {
       expiresAt: addMilliseconds(new Date(), ms(envConfig.OTP_EXPIRES_IN)),
     })
     // 3. Gửi mã OTP đến email
+    const { error } = await this.emailService.sendOTP({ email: body.email, code })
+    if (error) {
+      throw new UnprocessableEntityException({
+        message: 'Gửi mã OTP thất bại',
+        path: 'code',
+      })
+    }
     // 4. Lưu mã OTP vào database
     // 5. Trả về mã OTP
     return verificationCode
