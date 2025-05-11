@@ -27,3 +27,5 @@ export const TypeVerificationCode = {
   LOGIN: 'LOGIN',
   DISABLE_2FA: 'DISABLE_2FA',
 } as const
+
+export type TypeVerificationCodeType = (typeof TypeVerificationCode)[keyof typeof TypeVerificationCode]

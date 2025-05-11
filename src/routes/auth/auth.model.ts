@@ -11,6 +11,7 @@ export const RegisterBodySchema = userSchema
   })
   .extend({
     confirmPassword: z.string().min(8).max(100),
+    code: z.string().length(6),
   })
   .strict()
   .superRefine(({ confirmPassword, password }, ctx) => {
