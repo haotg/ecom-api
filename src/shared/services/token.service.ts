@@ -1,12 +1,17 @@
 import { Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
-import { TokenPayload } from '../types/jwt.type'
+import {
+  AccessTokenPayload,
+  AccessTokenPayloadCreate,
+  RefreshTokenPayload,
+  RefreshTokenPayloadCreate,
+} from '../types/jwt.type'
 
 @Injectable()
 export class TokenService {
   constructor(private readonly jwtService: JwtService) {}
 
-  signAccessToken(payload: { userId: number }) {
+  signAccessToken(payload: AccessTokenPayloadCreate) {
     return this.jwtService.sign(
       { ...payload, jwtId: crypto.randomUUID() },
       {
@@ -17,7 +22,7 @@ export class TokenService {
     )
   }
 
-  signRefreshToken(payload: { userId: number }) {
+  signRefreshToken(payload: RefreshTokenPayloadCreate) {
     return this.jwtService.sign(
       { ...payload, jwtId: crypto.randomUUID() },
       {
@@ -28,13 +33,13 @@ export class TokenService {
     )
   }
 
-  verifyAccessToken(token: string): Promise<TokenPayload> {
+  verifyAccessToken(token: string): Promise<AccessTokenPayload> {
     return this.jwtService.verifyAsync(token, {
       secret: process.env.ACCESS_TOKEN_SECRET,
     })
   }
 
-  verifyRefreshToken(token: string): Promise<TokenPayload> {
+  verifyRefreshToken(token: string): Promise<RefreshTokenPayload> {
     return this.jwtService.verifyAsync(token, {
       secret: process.env.REFRESH_TOKEN_SECRET,
     })
