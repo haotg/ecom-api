@@ -74,13 +74,14 @@ export class AuthService {
     }
     // 2. Tạo mã OTP
     const code = generateOTP()
+    // 3. Lưu mã OTP vào database
     const verificationCode = await this.authRepository.createVerificationCode({
       email: body.email,
       code,
       type: body.type,
       expiresAt: addMilliseconds(new Date(), ms(envConfig.OTP_EXPIRES_IN)),
     })
-    // 3. Gửi mã OTP đến email
+    // 4. Gửi mã OTP đến email
     const { error } = await this.emailService.sendOTP({ email: body.email, code })
     if (error) {
       throw new UnprocessableEntityException({
@@ -88,7 +89,6 @@ export class AuthService {
         path: 'code',
       })
     }
-    // 4. Lưu mã OTP vào database
     // 5. Trả về mã OTP
     return verificationCode
   }
