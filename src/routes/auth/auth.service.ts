@@ -14,6 +14,7 @@ import { TypeVerificationCode } from 'src/shared/constants/auth.constant'
 import { EmailService } from 'src/shared/services/email.service'
 import { TokenService } from 'src/shared/services/token.service'
 import { AccessTokenPayloadCreate } from 'src/shared/types/jwt.type'
+import { isNotFoundConstraintPrismaError } from 'src/shared/helpers'
 
 @Injectable()
 export class AuthService {
@@ -189,24 +190,26 @@ export class AuthService {
     }
   }
 
-  //   async logout(refreshToken: string) {
-  //     try {
-  //       // 1. Kiểm tra refreshToken có hợp lệ không
-  //       await this.tokenService.verifyRefreshToken(refreshToken)
-  //       // 2. Xóa refreshToken trong database
-  //       await this.prismaService.refreshToken.delete({
-  //         where: {
-  //           token: refreshToken,
-  //         },
-  //       })
-  //       return { message: 'Logout successfully' }
-  //     } catch (error) {
-  //       // Trường hợp đã refresh token rồi, hãy thông báo cho user biết
-  //       // refresh token của họ đã bị đánh cắp
-  //       if (isNotFoundConstraintPrismaError(error)) {
-  //         throw new UnauthorizedException('Refresh token has been revoked')
-  //       }
-  //       throw new UnauthorizedException()
-  //     }
-  //   }
+  async logout(refreshToken: string) {
+    try {
+      // 1. Kiểm tra refreshToken có hợp lệ không
+      await this.tokenService.verifyRefreshToken(refreshToken)
+      // 2. Xóa refreshToken trong database
+      const deletedRefreshToken = await this.authRepository.deleteRefreshToken({
+        token: refreshToken,
+      })
+      //  3. Cập nhật device là đã logout
+      await this.authRepository.updateDevice(deletedRefreshToken.deviceId, {
+        isActive: false,
+      })
+      return { message: 'Logout successfully' }
+    } catch (error) {
+      // Trường hợp đã refresh token rồi, hãy thông báo cho user biết
+      // refresh token của họ đã bị đánh cắp
+      if (isNotFoundConstraintPrismaError(error)) {
+        throw new UnauthorizedException('Refresh token has been revoked')
+      }
+      throw new UnauthorizedException()
+    }
+  }
 }
