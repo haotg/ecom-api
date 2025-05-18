@@ -75,7 +75,6 @@ export const DeviceSchema = z.object({
   ip: z.string(),
   lastActive: z.date(),
   createdAt: z.date(),
-  updatedAt: z.date(),
   isActive: z.boolean(),
 })
 
