@@ -14,7 +14,6 @@ export class EmailService {
 
   async sendOTP(payload: { email: string; code: string }) {
     const html = await render(<OTPEmail otpCode={payload.code} title="OTP Verification" />)
-    console.log(html)
     const subject = 'OTP Verification'
     return this.resend.emails.send({
       from: 'Ecommerce <no-reply@haotg.id.vn>',

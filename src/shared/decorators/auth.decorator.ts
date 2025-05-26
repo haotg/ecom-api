@@ -9,3 +9,5 @@ export const Auth = (authType: AuthType[], options?: { condition: ConditionGuard
     options: options ?? { condition: ConditionGuard.And },
   })
 }
+
+export const IsPublic = () => Auth([AuthType.None])

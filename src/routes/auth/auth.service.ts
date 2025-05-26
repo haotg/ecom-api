@@ -72,14 +72,14 @@ export class AuthService {
     const user = await this.sharedUserRepository.findUnique({ email: body.email })
     if (user) {
       throw new UnprocessableEntityException({
-        message: 'Email đã tồn tại',
+        message: 'Email already exists',
         path: 'email',
       })
     }
     // 2. Tạo mã OTP
     const code = generateOTP()
     // 3. Lưu mã OTP vào database
-    const verificationCode = await this.authRepository.createVerificationCode({
+    await this.authRepository.createVerificationCode({
       email: body.email,
       code,
       type: body.type,
@@ -89,12 +89,12 @@ export class AuthService {
     const { error } = await this.emailService.sendOTP({ email: body.email, code })
     if (error) {
       throw new UnprocessableEntityException({
-        message: 'Gửi mã OTP thất bại',
+        message: 'Send OTP failed',
         path: 'code',
       })
     }
-    // 5. Trả về mã OTP
-    return verificationCode
+    // 5. Trả về message
+    return { message: 'Send OTP successfully' }
   }
 
   async login(body: LoginBodyType & { userAgent?: string; ip?: string }) {
