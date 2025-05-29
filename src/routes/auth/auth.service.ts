@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, UnprocessableEntityException, HttpException } from '@nestjs/common'
+import { Injectable, HttpException } from '@nestjs/common'
 import { isUniqueConstraintPrismaError } from 'src/shared/helpers'
 import { HashingService } from 'src/shared/services/hashing.service'
 import { RolesService } from './roles.service'
@@ -15,6 +15,16 @@ import { EmailService } from 'src/shared/services/email.service'
 import { TokenService } from 'src/shared/services/token.service'
 import { AccessTokenPayloadCreate } from 'src/shared/types/jwt.type'
 import { isNotFoundConstraintPrismaError } from 'src/shared/helpers'
+import {
+  EmailAlreadyExistsException,
+  EmailNotFoundException,
+  FailedToSendOTPException,
+  InvalidOTPException,
+  InvalidPasswordException,
+  OTPExpiredException,
+  RefreshTokenAlreadyUsedException,
+  UnauthorizedAccessException,
+} from 'src/routes/auth/error.model'
 
 @Injectable()
 export class AuthService {
@@ -34,17 +44,11 @@ export class AuthService {
         type: TypeVerificationCode.REGISTER,
       })
       if (!verificationCode) {
-        throw new UnprocessableEntityException({
-          message: 'Mã OTP không hợp lệ',
-          path: 'code',
-        })
+        throw InvalidOTPException
       }
 
       if (verificationCode.expiresAt < new Date()) {
-        throw new UnprocessableEntityException({
-          message: 'Mã OTP đã hết hạn',
-          path: 'code',
-        })
+        throw OTPExpiredException
       }
 
       const clientRoleId = await this.rolesService.getClientRoleId()
@@ -58,10 +62,7 @@ export class AuthService {
       })
     } catch (error) {
       if (isUniqueConstraintPrismaError(error)) {
-        throw new UnprocessableEntityException({
-          message: 'Email đã tồn tại',
-          path: 'email',
-        })
+        throw EmailAlreadyExistsException
       }
       throw error
     }
@@ -71,10 +72,7 @@ export class AuthService {
     // 1. Kiểm tra email đã tồn tại trong database hay chưa
     const user = await this.sharedUserRepository.findUnique({ email: body.email })
     if (user) {
-      throw new UnprocessableEntityException({
-        message: 'Email already exists',
-        path: 'email',
-      })
+      throw EmailAlreadyExistsException
     }
     // 2. Tạo mã OTP
     const code = generateOTP()
@@ -88,10 +86,7 @@ export class AuthService {
     // 4. Gửi mã OTP đến email
     const { error } = await this.emailService.sendOTP({ email: body.email, code })
     if (error) {
-      throw new UnprocessableEntityException({
-        message: 'Send OTP failed',
-        path: 'code',
-      })
+      throw FailedToSendOTPException
     }
     // 5. Trả về message
     return { message: 'Send OTP successfully' }
@@ -103,20 +98,12 @@ export class AuthService {
     })
 
     if (!user) {
-      throw new UnprocessableEntityException({
-        message: 'Email không tồn tại',
-        path: 'email',
-      })
+      throw EmailNotFoundException
     }
 
     const isPasswordMatch = await this.hashingService.compare(body.password, user.password)
     if (!isPasswordMatch) {
-      throw new UnprocessableEntityException([
-        {
-          field: 'password',
-          error: 'Mật khẩu không chính xác',
-        },
-      ])
+      throw InvalidPasswordException
     }
     const device = await this.authRepository.createDevice({
       userId: user.id,
@@ -161,7 +148,7 @@ export class AuthService {
         token: refreshToken,
       })
       if (!refreshTokenIndb) {
-        throw new UnauthorizedException('Refresh token has been revoked')
+        throw RefreshTokenAlreadyUsedException
       }
       const {
         deviceId,
@@ -186,7 +173,7 @@ export class AuthService {
       if (error instanceof HttpException) {
         throw error
       }
-      throw new UnauthorizedException()
+      throw UnauthorizedAccessException
     }
   }
 
@@ -207,9 +194,9 @@ export class AuthService {
       // Trường hợp đã refresh token rồi, hãy thông báo cho user biết
       // refresh token của họ đã bị đánh cắp
       if (isNotFoundConstraintPrismaError(error)) {
-        throw new UnauthorizedException('Refresh token has been revoked')
+        throw RefreshTokenAlreadyUsedException
       }
-      throw new UnauthorizedException()
+      throw UnauthorizedAccessException
     }
   }
 }
