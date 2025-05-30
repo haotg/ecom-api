@@ -11,6 +11,7 @@ import {
   RefreshTokenResponseDto,
   LogoutBodyDto,
   GetAuthorizationUrlResDto,
+  ForgotPasswordBodyDto,
 } from './auth.dto'
 import { ZodSerializerDto } from 'nestjs-zod'
 import { UserAgent } from 'src/shared/decorators/user-agent.decorator'
@@ -81,5 +82,12 @@ export class AuthController {
         error instanceof Error ? error.message : 'Lỗi khi xử lý callback từ google, vui lòng thử lại bằng cách khác'
       return res.redirect(`${envConfig.GOOGLE_CLIENT_REDIRECT_URI}?errorMessage=${message}`)
     }
+  }
+
+  @Post('forgot-password')
+  @IsPublic()
+  @ZodSerializerDto(MessageResponseDto)
+  forgotPassword(@Body() body: ForgotPasswordBodyDto) {
+    return this.authService.forgotPassword(body)
   }
 }
