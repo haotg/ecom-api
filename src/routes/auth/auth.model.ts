@@ -53,6 +53,10 @@ export const LoginBodySchema = userSchema
     email: true,
     password: true,
   })
+  .extend({
+    totpCode: z.string().length(6).optional(), // 2FA Code
+    code: z.string().length(6).optional(), // Email OTP Code
+  })
   .strict()
 
 export const LoginResponseSchema = z.object({
@@ -128,6 +132,34 @@ export const ForgotPasswordBodySchema = z
     }
   })
 
+export const DisableTwoFactorBodySchema = z
+  .object({
+    totpCode: z.string().length(6).optional(),
+    code: z.string().length(6).optional(),
+  })
+  .strict()
+  .superRefine(({ totpCode, code }, ctx) => {
+    const message = 'Only one of totpCode or code must be provided'
+    // Nếu cả hai đều có dữ liệu hoặc không có thì sẽ nhảy vào if
+    if ((totpCode !== undefined) === (code !== undefined)) {
+      ctx.addIssue({
+        code: ZodIssueCode.custom,
+        message,
+        path: ['totpCode'],
+      })
+      ctx.addIssue({
+        code: ZodIssueCode.custom,
+        message,
+        path: ['code'],
+      })
+    }
+  })
+
+export const TwoFactorSetupResponseSchema = z.object({
+  secret: z.string(),
+  url: z.string(),
+})
+
 export type RoleType = z.infer<typeof RoleSchema>
 export type RegisterBodyType = z.infer<typeof RegisterBodySchema>
 export type RegisterResponseType = z.infer<typeof RegisterResponseSchema>
@@ -143,3 +175,5 @@ export type LogoutBodyType = RefreshTokenBodyType
 export type GoogleAuthStateType = z.infer<typeof GoogleAuthStateSchema>
 export type GetAuthorizationUrlResType = z.infer<typeof GetAuthorizationUrlResSchema>
 export type ForgotPasswordBodyType = z.infer<typeof ForgotPasswordBodySchema>
+export type DisableTwoFactorBodyType = z.infer<typeof DisableTwoFactorBodySchema>
+export type TwoFactorSetupResponseType = z.infer<typeof TwoFactorSetupResponseSchema>
