@@ -157,7 +157,7 @@ export const DisableTwoFactorBodySchema = z
 
 export const TwoFactorSetupResponseSchema = z.object({
   secret: z.string(),
-  url: z.string(),
+  uri: z.string(),
 })
 
 export type RoleType = z.infer<typeof RoleSchema>

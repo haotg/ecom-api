@@ -10,7 +10,16 @@ import { AuthenticationGuard } from './guards/authentication.guard'
 import { HttpExceptionFilter } from './filters/http-exception.filter'
 import { SharedUserRepository } from './repositories/shared-user.repo'
 import { EmailService } from './services/email.service'
-const sharedServices = [PrismaService, HashingService, TokenService, EmailService, SharedUserRepository]
+import { TwoFactorService } from './services/2fa.service'
+
+const sharedServices = [
+  PrismaService,
+  HashingService,
+  TokenService,
+  EmailService,
+  SharedUserRepository,
+  TwoFactorService,
+]
 
 @Global()
 @Module({
