@@ -2,7 +2,7 @@ import { Injectable, HttpException } from '@nestjs/common'
 import { isUniqueConstraintPrismaError } from 'src/shared/helpers'
 import { HashingService } from 'src/shared/services/hashing.service'
 import { RolesService } from './roles.service'
-import { ForgotPasswordBodyType, LoginBodyType, RefreshTokenBodyType, RegisterBodyType } from './auth.model'
+import { DisableTwoFactorBodyType, ForgotPasswordBodyType, LoginBodyType, RefreshTokenBodyType, RegisterBodyType } from './auth.model'
 import { AuthRepository } from './auth.repo'
 import { SendOTPBodyType } from './auth.model'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
@@ -26,6 +26,7 @@ import {
   OTPExpiredException,
   RefreshTokenAlreadyUsedException,
   TOTPAlreadyEnabledException,
+  TOTPNotEnabledException,
   UnauthorizedAccessException,
 } from 'src/routes/auth/error.model'
 import { TwoFactorService } from 'src/shared/services/2fa.service'
@@ -311,5 +312,39 @@ export class AuthService {
     await this.authRepository.updateUser({ id: userId }, { totpSecret: secret })
     // 4. Trả về url cho phía FE
     return { secret, uri }
+  }
+
+  async disableTwoFactorAuth(data: DisableTwoFactorBodyType & { userId: number }) {
+    const { userId, totpCode, code } = data
+    // 1. Lấy thông tin user, kiểm tra xem user có tồn tại hay không, và xem họ đã bật 2FA chưa
+    const user = await this.sharedUserRepository.findUnique({ id: userId })
+    if (!user) {
+      throw EmailNotFoundException
+    }
+    if (!user.totpSecret) {
+      throw TOTPNotEnabledException
+    }
+    // 2. Kiểm tra TOTP Code có hợp lệ không
+    if (totpCode) {
+      const isValid = this.twoFactorService.verifyTOTP({
+        email: user.email,
+        token: totpCode,
+        secret: user.totpSecret,
+      })
+      if (!isValid) {
+        throw InvalidTOTPException
+      }
+    } else if (code) {
+      //3. Kiểm tra OTP Code có hợp lệ không
+      await this.validateVerificationCode({
+        email: user.email,
+        code,
+        type: TypeVerificationCode.DISABLE_2FA,
+      })
+    }
+    // 4. Xóa secret (cập nhật lại totpSecret thành null)
+    await this.authRepository.updateUser({ id: userId }, { totpSecret: null })
+    // 5. Trả về message
+    return { message: 'Disable two factor auth successfully' }
   }
 }

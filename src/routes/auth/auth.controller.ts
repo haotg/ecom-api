@@ -13,6 +13,7 @@ import {
   GetAuthorizationUrlResDto,
   ForgotPasswordBodyDto,
   TwoFactorSetupResponseDto,
+  DisableTwoFactorBodyDto,
 } from './auth.dto'
 import { ZodSerializerDto } from 'nestjs-zod'
 import { UserAgent } from 'src/shared/decorators/user-agent.decorator'
@@ -98,5 +99,14 @@ export class AuthController {
   @ZodSerializerDto(TwoFactorSetupResponseDto)
   setupTwoFactorAuth(@Body() _: EmptyBodyDto, @ActiveUser('userId') userId: number) {
     return this.authService.setupTwoFactorAuth(userId)
+  }
+
+  @Post('2fa/disable')
+  @ZodSerializerDto(MessageResponseDto)
+  disableTwoFactorAuth(@Body() body: DisableTwoFactorBodyDto, @ActiveUser('userId') userId: number) {
+    return this.authService.disableTwoFactorAuth({
+      ...body,
+      userId,
+    })
   }
 }
