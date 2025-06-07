@@ -7,9 +7,9 @@ import { APP_PIPE } from '@nestjs/core'
 import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 import { ZodSerializerInterceptor } from 'nestjs-zod'
-
+import { LanguageModule } from 'src/routes/language/language.module'
 @Module({
-  imports: [SharedModule, AuthModule],
+  imports: [SharedModule, AuthModule, LanguageModule],
   controllers: [AppController],
   providers: [
     AppService,
