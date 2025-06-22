@@ -60,7 +60,7 @@ export const LoginBodySchema = userSchema
   .strict()
   .superRefine(({ totpCode, code }, ctx) => {
     const message = 'Only one of totpCode or code must be provided'
-    if ((totpCode !== undefined) && (code !== undefined)) {
+    if (totpCode !== undefined && code !== undefined) {
       ctx.addIssue({ code: ZodIssueCode.custom, message, path: ['totpCode'] })
       ctx.addIssue({ code: ZodIssueCode.custom, message, path: ['code'] })
     }
