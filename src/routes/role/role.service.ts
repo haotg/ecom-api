@@ -3,8 +3,8 @@ import { RoleRepo } from 'src/routes/role/role.repo'
 import { CreateRoleBodyType, GetRolesQueryType, UpdateRoleBodyType } from 'src/routes/role/role.model'
 import { NotFoundRecordException } from 'src/shared/error'
 import { isNotFoundConstraintPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
-import { RoleAlreadyExistsException } from 'src/routes/role/role.error'
-
+import { RoleAlreadyExistsException, ProhibitedActionOnBaseRoleException } from 'src/routes/role/role.error'
+import { RoleName } from 'src/shared/constants/role.constant'
 @Injectable()
 export class RoleService {
   constructor(private roleRepo: RoleRepo) {}
@@ -39,12 +39,20 @@ export class RoleService {
 
   async update({ id, data, updatedById }: { id: number; data: UpdateRoleBodyType; updatedById: number }) {
     try {
-      const role = await this.roleRepo.update({
+      const role = await this.roleRepo.findById(id)
+      if (!role) {
+        throw NotFoundRecordException
+      }
+      // Không được phép bất kì ai xóa role Admin
+      if (role.name === RoleName.Admin) {
+        throw ProhibitedActionOnBaseRoleException
+      }
+      const updatedRole = await this.roleRepo.update({
         id,
         updatedById,
         data,
       })
-      return role
+      return updatedRole
     } catch (error) {
       if (isNotFoundConstraintPrismaError(error)) {
         throw NotFoundRecordException
@@ -61,6 +69,16 @@ export class RoleService {
 
   async delete({ id, deletedById }: { id: number; deletedById: number }) {
     try {
+      const role = await this.roleRepo.findById(id)
+      if (!role) {
+        throw NotFoundRecordException
+      }
+
+      // Không được phép xóa các role cơ bản như Admin, Client, Seller
+      const baseRoles: string[] = [RoleName.Admin, RoleName.Client, RoleName.Seller]
+      if (baseRoles.includes(role.name)) {
+        throw ProhibitedActionOnBaseRoleException
+      }
       await this.roleRepo.delete({
         id,
         deletedById,
