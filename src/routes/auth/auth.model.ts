@@ -1,14 +1,13 @@
 import { z, ZodIssueCode } from 'zod'
 import { TypeVerificationCode } from 'src/shared/constants/auth.constant'
-import { userSchema } from 'src/shared/models/shared-user.model'
+import { UserSchema } from 'src/shared/models/shared-user.model'
 
-export const RegisterBodySchema = userSchema
-  .pick({
-    email: true,
-    password: true,
-    name: true,
-    phoneNumber: true,
-  })
+export const RegisterBodySchema = UserSchema.pick({
+  email: true,
+  password: true,
+  name: true,
+  phoneNumber: true,
+})
   .extend({
     confirmPassword: z.string().min(8).max(100),
     code: z.string().length(6),
@@ -24,7 +23,7 @@ export const RegisterBodySchema = userSchema
     }
   })
 
-export const RegisterResponseSchema = userSchema.omit({
+export const RegisterResponseSchema = UserSchema.omit({
   password: true,
   totpSecret: true,
 })
@@ -48,11 +47,10 @@ export const sendOTPBodySchema = VerificationCodeSchema.pick({
   type: true,
 }).strict()
 
-export const LoginBodySchema = userSchema
-  .pick({
-    email: true,
-    password: true,
-  })
+export const LoginBodySchema = UserSchema.pick({
+  email: true,
+  password: true,
+})
   .extend({
     totpCode: z.string().length(6).optional(), // 2FA Code
     code: z.string().length(6).optional(), // Email OTP Code

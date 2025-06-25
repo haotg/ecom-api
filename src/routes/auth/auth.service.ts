@@ -2,7 +2,13 @@ import { Injectable, HttpException } from '@nestjs/common'
 import { isUniqueConstraintPrismaError } from 'src/shared/helpers'
 import { HashingService } from 'src/shared/services/hashing.service'
 import { RolesService } from './roles.service'
-import { DisableTwoFactorBodyType, ForgotPasswordBodyType, LoginBodyType, RefreshTokenBodyType, RegisterBodyType } from './auth.model'
+import {
+  DisableTwoFactorBodyType,
+  ForgotPasswordBodyType,
+  LoginBodyType,
+  RefreshTokenBodyType,
+  RegisterBodyType,
+} from './auth.model'
 import { AuthRepository } from './auth.repo'
 import { SendOTPBodyType } from './auth.model'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
@@ -20,7 +26,6 @@ import {
   EmailNotFoundException,
   FailedToSendOTPException,
   InvalidOTPException,
-  InvalidPasswordException,
   InvalidTOTPAndCodeException,
   InvalidTOTPException,
   OTPExpiredException,
@@ -30,6 +35,7 @@ import {
   UnauthorizedAccessException,
 } from 'src/routes/auth/auth.error'
 import { TwoFactorService } from 'src/shared/services/2fa.service'
+import { InvalidPasswordException } from 'src/shared/error'
 
 @Injectable()
 export class AuthService {
@@ -140,18 +146,18 @@ export class AuthService {
     }
 
     // 2. Nếu user đã bật mã 2FA thì kiểm tra mã 2FA TOTP Code hoặc OTP Code (email)
-    if(user.totpSecret) {
+    if (user.totpSecret) {
       // Nếu không có mã TOTP Code và Code thì thông báo cho client biết
-      if(!body.totpCode && ! body.code){
+      if (!body.totpCode && !body.code) {
         throw InvalidTOTPAndCodeException
       }
 
       // Kiểm tra TOTP Code có hợp lệ không
-      if(body.totpCode) {
+      if (body.totpCode) {
         const isValid = this.twoFactorService.verifyTOTP({
           email: user.email,
           token: body.totpCode,
-          secret: user.totpSecret,  
+          secret: user.totpSecret,
         })
         if (!isValid) {
           throw InvalidTOTPException
