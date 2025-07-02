@@ -165,7 +165,6 @@ export const TwoFactorSetupResponseSchema = z.object({
   uri: z.string(),
 })
 
-export type RoleType = z.infer<typeof RoleSchema>
 export type RegisterBodyType = z.infer<typeof RegisterBodySchema>
 export type RegisterResponseType = z.infer<typeof RegisterResponseSchema>
 export type VerificationCodeType = z.infer<typeof VerificationCodeSchema>
