@@ -35,7 +35,7 @@ import {
 } from 'src/routes/auth/auth.error'
 import { TwoFactorService } from 'src/shared/services/2fa.service'
 import { InvalidPasswordException } from 'src/shared/error'
-import { SharedRoleRepository } from 'src/shared/repositories/shared-role-repo'
+import { SharedRoleRepository } from 'src/shared/repositories/shared-role.repo'
 @Injectable()
 export class AuthService {
   constructor(
