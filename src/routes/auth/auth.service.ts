@@ -103,7 +103,7 @@ export class AuthService {
 
   async sendOTP(body: SendOTPBodyType) {
     // 1. Kiểm tra email đã tồn tại trong database hay chưa
-    const user = await this.sharedUserRepository.findUnique({ email: body.email, deletedAt: null })
+    const user = await this.sharedUserRepository.findUnique({ email: body.email })
     if (body.type === TypeVerificationCode.REGISTER && user) {
       throw EmailAlreadyExistsException
     }
@@ -133,7 +133,6 @@ export class AuthService {
     // 1. Lấy thông tin user, kiểm tra user có tồn tại hay không, mật khẩu có đúng không
     const user = await this.authRepository.findUniqueUserIncludeRole({
       email: body.email,
-      deletedAt: null,
     })
 
     if (!user) {

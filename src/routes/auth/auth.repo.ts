@@ -77,8 +77,11 @@ export class AuthRepository {
   }
 
   async findUniqueUserIncludeRole(where: WhereUniqueUserType): Promise<(UserType & { role: RoleType }) | null> {
-    return this.prismaService.user.findUnique({
-      where,
+    return this.prismaService.user.findFirst({
+      where: {
+        ...where,
+        deletedAt: null,
+      },
       include: {
         role: true,
       },
@@ -113,9 +116,12 @@ export class AuthRepository {
     })
   }
 
-  updateUser(where: { id: number } | { email: string }, data: Partial<Omit<UserType, 'id'>>): Promise<UserType> {
+  updateUser(where: { id: number }, data: Partial<Omit<UserType, 'id'>>): Promise<UserType> {
     return this.prismaService.user.update({
-      where,
+      where: {
+        ...where,
+        deletedAt: null,
+      },
       data,
     })
   }
