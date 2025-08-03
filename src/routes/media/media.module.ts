@@ -6,6 +6,7 @@ import { MediaController } from 'src/routes/media/media.controller'
 import { MediaService } from 'src/routes/media/media.service'
 import { UPLOAD_DIR } from 'src/shared/constants/other.constant'
 import { generateRandomFilename } from 'src/shared/helpers'
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, UPLOAD_DIR)
